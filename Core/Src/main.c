@@ -18,13 +18,12 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "tim.h"
 #include "gpio.h"
-#include "stm32f1xx_hal.h"
-#include "stm32f1xx_hal_gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "motor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,8 +87,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
+  Motor_Init();
+  Motor_Start();
+  HAL_Delay(2000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -99,8 +101,33 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    HAL_Delay(500);
+    uint16_t duty;
+
+    /* Accelerate CW: 20% → 80% duty */
+    Motor_Start();
+    Motor_SetDirection(MOTOR_DIR_CW);
+    for (duty = 8; duty <= 32; duty += 4) {
+        Motor_SetSpeed(duty);
+        HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+        HAL_Delay(2000);
+    }
+
+    /* Brake and pause */
+    Motor_Stop();
+    HAL_Delay(2000);
+
+    /* Accelerate CCW: 20% → 80% duty */
+    Motor_Start();
+    Motor_SetDirection(MOTOR_DIR_CCW);
+    for (duty = 8; duty <= 32; duty += 4) {
+        Motor_SetSpeed(duty);
+        HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+        HAL_Delay(2000);
+    }
+
+    /* Brake and pause */
+    Motor_Stop();
+    HAL_Delay(2000);
   }
   /* USER CODE END 3 */
 }
