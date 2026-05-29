@@ -3,8 +3,11 @@
 
 #include "main.h"
 
-/* FGO pulses per revolution (1 or 3, depending on motor model) */
-#define MOTOR_FGO_PPR  3
+/* FGO pulses per revolution (3 pulses/electrical-rev × N pole-pairs) */
+#define MOTOR_FGO_PPR   12      /* 电机旋转1圈机械角度对应的中断数量 2对极 * 3FGO * 2上下沿 */
+
+
+#define MOTOR_FGO_TIME  1200    /* 转换成1分钟 60s * 1000ms / 50ms计算周期 */
 
 /* Pin definitions */
 #define MOTOR_CW_CCW_Pin     GPIO_PIN_5
@@ -33,6 +36,8 @@ void Motor_SetSpeed(uint16_t duty);
 void Motor_SetDirection(Motor_Direction dir);
 void Motor_SetBrake(Motor_Brake state);
 uint32_t Motor_GetPulseCount(void);
+void Motor_SetPulseCount(uint32_t count);
 uint32_t Motor_GetRPM(void);
+void Motor_PulseCallback(void);
 
 #endif /* __MOTOR_H__ */

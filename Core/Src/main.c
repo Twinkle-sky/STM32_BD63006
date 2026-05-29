@@ -19,11 +19,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "motor.h"
+#include <stdint.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,10 +91,15 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   Motor_Init();
   Motor_Start();
   HAL_Delay(2000);
+
+  Motor_Start();
+  Motor_SetDirection(MOTOR_DIR_CW);
+  Motor_SetSpeed(20);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -101,33 +109,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    uint16_t duty;
 
-    /* Accelerate CW: 20% → 80% duty */
-    Motor_Start();
-    Motor_SetDirection(MOTOR_DIR_CW);
-    for (duty = 8; duty <= 32; duty += 4) {
-        Motor_SetSpeed(duty);
-        HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-        HAL_Delay(2000);
-    }
+    HAL_Delay(50);
+    uint32_t cnt = Motor_GetPulseCount();
+    Motor_SetPulseCount(0);
+    uint32_t speed_out = cnt * MOTOR_FGO_TIME / MOTOR_FGO_PPR;
+    printf("cnt: %lu\r\n", speed_out);
 
-    /* Brake and pause */
-    Motor_Stop();
-    HAL_Delay(2000);
-
-    /* Accelerate CCW: 20% → 80% duty */
-    Motor_Start();
-    Motor_SetDirection(MOTOR_DIR_CCW);
-    for (duty = 8; duty <= 32; duty += 4) {
-        Motor_SetSpeed(duty);
-        HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-        HAL_Delay(2000);
-    }
-
-    /* Brake and pause */
-    Motor_Stop();
-    HAL_Delay(2000);
   }
   /* USER CODE END 3 */
 }
@@ -172,6 +160,19 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+int __io_putchar(int ch)
+{
+    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+    return ch;
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin == GPIO_PIN_4) {
+        Motor_PulseCallback();
+    }
+}
 
 /* USER CODE END 4 */
 

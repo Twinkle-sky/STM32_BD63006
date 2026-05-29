@@ -54,6 +54,11 @@ uint32_t Motor_GetPulseCount(void)
     return fgo_pulse_count;
 }
 
+void Motor_SetPulseCount(uint32_t count)
+{
+    fgo_pulse_count = count;
+}
+
 uint32_t Motor_GetRPM(void)
 {
     uint32_t tick = HAL_GetTick();
@@ -69,10 +74,7 @@ uint32_t Motor_GetRPM(void)
     return motor_rpm;
 }
 
-/* Override HAL weak callback — invoked by EXTI4_IRQHandler via HAL_GPIO_EXTI_IRQHandler */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+void Motor_PulseCallback(void)
 {
-    if (GPIO_Pin == MOTOR_FGO_Pin) {
-        fgo_pulse_count++;
-    }
+    fgo_pulse_count++;
 }
